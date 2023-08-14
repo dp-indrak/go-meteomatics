@@ -19,6 +19,7 @@ const (
 	UnitsKilogramsPerCubicMeter    Units = "kgm3"
 	UnitsKnots                     Units = "kn"
 	UnitsMeters                    Units = "m"
+	UnitsCentimeters               Units = "cm"
 	UnitsMillimeters               Units = "mm"
 	UnitsMetersPerSecond           Units = "ms"
 	UnitsOctas                     Units = "octas"

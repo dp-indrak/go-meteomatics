@@ -26,12 +26,14 @@ type ClientOption func(*Client)
 
 // RequestOptions are per-request options.
 type RequestOptions struct {
+	Model                 string
 	Source                string
 	TemporalInterpolation string
 	EnsembleSelect        string
 	ClusterSelect         string
 	Timeout               int
 	Route                 bool
+	OnInvalid             string
 }
 
 // WithBaseURL sets the base URL.
@@ -111,6 +113,9 @@ func (o *RequestOptions) Values() url.Values {
 		return nil
 	}
 	v := url.Values{}
+	if o.Model != "" {
+		v.Set("model", o.Model)
+	}
 	if o.Source != "" {
 		v.Set("source", o.Source)
 	}
@@ -128,6 +133,9 @@ func (o *RequestOptions) Values() url.Values {
 	}
 	if o.Route {
 		v.Set("route", "true")
+	}
+	if o.OnInvalid != "" {
+		v.Set("on_invalid", o.OnInvalid)
 	}
 	if len(v) == 0 {
 		return nil
