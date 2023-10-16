@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // DefaultBaseURL is the default base URL.
@@ -85,6 +86,45 @@ func (c *Client) Request(ctx context.Context, ts TimeStringer, ps ParameterStrin
 	}
 	req = req.WithContext(ctx)
 	req.Header.Set("Accept", fs.ContentType())
+	for _, f := range c.preRequestFuncs {
+		f(req)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || http.StatusMultipleChoices <= resp.StatusCode {
+		respBody, _ := ioutil.ReadAll(resp.Body)
+		return nil, &Error{
+			Request:      req,
+			Response:     resp,
+			ResponseBody: respBody,
+		}
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func (c *Client) RequestPost(ctx context.Context, ts TimeStringer, ps ParameterStringer, ls LocationStringer, fs FormatStringer, options *RequestOptions) ([]byte, error) {
+	urlStr := fmt.Sprintf("%s/%s/", c.baseURL, ts.TimeString())
+	if values := options.Values(); values != nil {
+		urlStr += "?" + values.Encode()
+	}
+
+	payload := fmt.Sprintf("%s/%s/%s", ps.ParameterString(), ls.LocationString(), fs.FormatString())
+
+	req, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	req.Header.Set("Accept", fs.ContentType())
+	req.Header.Set("Content-Type", "text/plain")
+	req.Header.Set("Content-Length", strconv.Itoa(len(payload)))
+
 	for _, f := range c.preRequestFuncs {
 		f(req)
 	}

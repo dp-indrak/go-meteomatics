@@ -90,6 +90,22 @@ func (c *Client) RequestJSON2(ctx context.Context, ts TimeStringer, ps Parameter
 	return jr, data, nil
 }
 
+// RequestJSONPost requests with POST
+func (c *Client) RequestJSONPost(ctx context.Context, ts TimeStringer, ps ParameterStringer, ls LocationStringer, options *RequestOptions) (*JSONResponse, []byte, error) {
+	data, err := c.RequestPost(ctx, ts, ps, ls, FormatJSON, options)
+	if err != nil {
+		return nil, data, err
+	}
+	jr := &JSONResponse{}
+	if err := json.Unmarshal(data, jr); err != nil {
+		return nil, data, err
+	}
+	if jr.Status != "OK" {
+		return nil, data, jr
+	}
+	return jr, data, nil
+}
+
 // RequestJSONRoute requests a forecast in JSON format.
 func (c *Client) RequestJSONRoute(ctx context.Context, ts TimeStringer, ps ParameterStringer, ls LocationStringer, options *RequestOptions) (*JSONRouteResponse, error) {
 	var ro RequestOptions
